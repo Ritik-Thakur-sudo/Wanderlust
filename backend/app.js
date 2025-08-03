@@ -2,6 +2,11 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const Listing = require("./models/listing.js");
+const router = express.Router();
+const listingRoutes = require("./routes/listingRoutes.js");
+
+
+app.use(express.json());
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -20,6 +25,9 @@ async function main() {
 app.get("/", (req, res) => {
   res.send("i am root");
 });
+
+// Routes
+app.use("/listings", listingRoutes);
 
 // app.get("/testLising", async (req, res) => {
 //   let sampleListing = new Listing({
