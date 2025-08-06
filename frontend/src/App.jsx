@@ -10,6 +10,7 @@ import Experiences from "./pages/Experiences";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 import Show from "./pages/Show";
+import Edit from "./pages/Edit";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/*" element={<NotFound />} />
         <Route path="/listings/:id" element={<Show />} />
+        <Route path="/listings/:id/edit" element={<Edit />} />
       </Routes>
       <Footer />
     </>
