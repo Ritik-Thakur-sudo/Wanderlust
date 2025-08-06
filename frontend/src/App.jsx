@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Homes from "./pages/Homes";
 import Experiences from "./pages/Experiences";
 import Services from "./pages/Services";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/homes" element={<Homes />} />
         <Route path="/experiences" element={<Experiences />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/*" element={<NotFound />} />
       </Routes>
       <Footer />
     </>
