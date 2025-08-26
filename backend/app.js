@@ -1,64 +1,47 @@
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
-const Listing = require("./models/listing.js");
-const router = express.Router();
-const listingRoutes = require("./routes/listingRoutes.js");
 const cors = require("cors");
 const session = require("express-session");
-
-app.use(express.json());
+const listingRoutes = require("./routes/listingRoutes.js");
+const app = express();
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+mongoose
+  .connect(MONGO_URL)
+  .then(() => console.log("connect to DB"))
+  .catch((error) => console.error(error));
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, 
+  })
+);
+
 app.use(express.json());
 
-main()
-  .then(() => {
-    console.log("connect to DB");
+app.use(
+  session({
+    secret: "mysupersecretcode",
+    resave: false,
+    saveUninitialized: false, 
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false, 
+      maxAge: 1000 * 60 * 60 * 24 * 7, 
+    },
   })
-  .catch((err) => {
-    console.log(err);
-  });
+);
 
-async function main() {
-  await mongoose.connect(MONGO_URL);
-}
-
-const sessionOptions = {
-  secret: "mysupersecretcode",
-  resave: false,
-  saveUninitialized: true,
-  Cookie: {
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true
-  }
-};
-
-app.use(session(sessionOptions));
-
-app.get("/", (req, res) => {
-  res.send("i am root");
+app.get("/session-test", (req, res) => {
+  req.session.visits = (req.session.visits || 0) + 1;
+  res.json({ ok: true, visits: req.session.visits });
 });
 
-// Routes
+app.get("/", (_req, res) => res.send("i am root"));
 app.use("/listings", listingRoutes);
 
-// app.get("/testLising", async (req, res) => {
-//   let sampleListing = new Listing({
-//     title: "My Home",
-//     description: "Good looking house",
-//     price: 1200,
-//     location: "Patna, Bihar",
-//     country: "India",
-//   });
-//   await sampleListing.save();
-//   console.log("sample was saved");
-//   res.send("successfull testing");
-// });
-
-app.listen(8080, () => {
-  console.log("server is listening on port 8080");
-});
+app.listen(8080, () =>
+  console.log("server listening on port 8080")
+);

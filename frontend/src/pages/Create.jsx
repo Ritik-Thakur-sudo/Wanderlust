@@ -51,14 +51,12 @@ export default function Create() {
     const { name, value } = e.target;
     setListing((prev) => ({ ...prev, [name]: value }));
 
-    // field validation
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate fields before submit
     const newErrors = {};
     Object.keys(listing).forEach((key) => {
       const error = validateField(key, listing[key]);
@@ -80,8 +78,9 @@ export default function Create() {
     }
   };
 
-  return (
+  return ( 
     <div className="p-5 max-w-xl mx-auto">
+          
       <h1 className="text-2xl font-bold mb-4">Create New Listing</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {["title", "description", "price", "location", "country"].map(

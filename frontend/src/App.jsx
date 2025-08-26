@@ -13,7 +13,14 @@ import Show from "./pages/Show";
 import Edit from "./pages/Edit";
 import Create from "./pages/Create";
 
+import api from "./axiosConfig";
+
+import { useEffect } from "react";
+
 function App() {
+  useEffect(() => {
+    api.get("/session-test").catch(console.error);
+  }, []);
   return (
     <>
       <Navbar />

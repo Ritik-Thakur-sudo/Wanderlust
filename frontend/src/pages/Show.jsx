@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../axiosConfig";
 import Review from "../components/Review";
 
 export default function Show() {
   const { id } = useParams();
   const [listing, setListing] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:8080/listings/${id}`)
-      .then((res) => {
-        setListing(res.data);
-        setReviews(res.data.reviews || []);
-        setLoading(false);
-      })
-      .catch((err) => {
+    const fetchListing = async () => {
+      try {
+        const res = await api.get(`/listings/${id}`);
+        const data = res.data?.data || res.data;
+
+        setListing(data);
+        setReviews(data.reviews || []);
+      } catch (err) {
         console.error("Error fetching listing:", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchListing();
   }, [id]);
 
   const addReview = (review) => {
@@ -31,7 +35,7 @@ export default function Show() {
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this listing?")) {
       try {
-        await axios.delete(`http://localhost:8080/listings/${id}`);
+        await api.delete(`/listings/${id}`);
         alert("Listing deleted successfully!");
         navigate("/");
       } catch (err) {
@@ -56,9 +60,10 @@ export default function Show() {
             className="w-full h-72 object-cover rounded-xl mb-4"
           />
         )}
+
         <p className="text-gray-700 text-lg mb-2">{listing.description}</p>
         <p className="text-gray-800 font-medium text-lg">
-          ₹{listing.price} - {listing.location}, {listing.country}
+          ₹{listing.price} — {listing.location}, {listing.country}
         </p>
 
         <div className="mt-4 flex gap-8 items-center">
@@ -72,11 +77,12 @@ export default function Show() {
             onClick={handleDelete}
             className="border px-4 py-2 rounded bg-red-500 text-white"
           >
-            Delete this listing
+            Delete listing
           </button>
         </div>
       </div>
-      <hr />
+
+      <hr className="my-6" />
       <Review reviews={reviews} addReview={addReview} setReviews={setReviews} />
     </>
   );
