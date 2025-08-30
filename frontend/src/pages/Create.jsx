@@ -12,6 +12,7 @@ export default function Create() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateField = (name, value) => {
@@ -50,7 +51,6 @@ export default function Create() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setListing((prev) => ({ ...prev, [name]: value }));
-
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
@@ -69,19 +69,30 @@ export default function Create() {
     }
 
     try {
-      const res = await axios.post("http://localhost:8080/listings", listing);
-      alert("Listing created successfully!");
-      navigate(`/listings/${res.data._id}`);
+      setLoading(true);
+      const res = await axios.post("http://localhost:8080/listings", listing, {
+        withCredentials: true, 
+      });
+
+      console.log("Listing created:", res.data);
+
+      const newId = res.data?.data?._id;
+      if (newId) {
+        navigate(`/listings/${newId}`);
+      } else {
+        navigate("/");
+      }
     } catch (err) {
-      console.error("Error creating listing:", err);
-      alert("Failed to create listing.");
+      console.error("Error creating listing:", err.response?.data || err);
+      alert(err.response?.data?.error || "Failed to create listing.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  return ( 
+  return (
     <div className="p-5 max-w-xl mx-auto">
-          
-      <h1 className="text-2xl font-bold mb-4">Create New Listing</h1>
+      <h1 className="text-2xl font-bold mb-4">Add New Listing</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {["title", "description", "price", "location", "country"].map(
           (field) => (
@@ -114,9 +125,9 @@ export default function Create() {
         <button
           type="submit"
           className="bg-green-600 text-white px-4 py-2 rounded"
-          disabled={Object.values(errors).some((err) => err)}
+          disabled={loading || Object.values(errors).some((err) => err)}
         >
-          Create Listing
+          {loading ? "Creating..." : "Create Listing"}
         </button>
       </form>
     </div>

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../axiosConfig";
+import { useAuth } from "../context/AuthContext";
 
 export default function Review({ reviews, setReviews }) {
   const { id } = useParams();
+  const { user } = useAuth();
   const [rating, setRating] = useState(1);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
@@ -31,9 +33,9 @@ export default function Review({ reviews, setReviews }) {
         review: { rating, comment },
       });
 
-      const payload = res.data?.data ?? res.data; 
+      const payload = res.data?.data ?? res.data;
       if (!payload || !payload._id) {
-        return setError("Review created");
+        return setError("Failed to create review");
       }
 
       setReviews((prev) => [...prev, payload]);
@@ -64,10 +66,27 @@ export default function Review({ reviews, setReviews }) {
 
   const Stars = ({ value }) => {
     const full = Math.max(0, Math.min(5, Number(value) || 0));
+    const stars = [];
+
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <img
+          key={i}
+          src="/OIP.jpg"
+          alt={i < full ? "filled star" : "empty star"}
+          className={`w-6 h-6 inline-block ${
+            i < full ? "" : "grayscale opacity-40"
+          }`}
+        />
+      );
+    }
+
     return (
-      <span aria-label={`Rating: ${full} out of 5`} className="font-medium">
-        {"★".repeat(full)}
-        <span className="text-gray-300">{"★".repeat(5 - full)}</span>
+      <span
+        aria-label={`Rating: ${full} out of 5`}
+        className="flex items-center gap-1"
+      >
+        {stars}
       </span>
     );
   };
@@ -80,7 +99,7 @@ export default function Review({ reviews, setReviews }) {
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="rating" className="block font-medium">
-              Rating (1–5)
+              Rating (1-5)
             </label>
             <input
               id="rating"
@@ -143,7 +162,10 @@ export default function Review({ reviews, setReviews }) {
               key={review._id}
               className="p-3 mb-3 border rounded-md bg-gray-50 shadow-sm"
             >
-              <p className="font-medium">Ritik Thakur</p>
+              <p className="font-medium">
+                {review.owner?.username || review.owner?.email || "Anonymous"}
+              </p>
+
               <p className="flex items-center gap-2 text-yellow-500">
                 <Stars value={review.rating} />
                 <span className="text-gray-600">({review.rating})</span>
@@ -155,17 +177,19 @@ export default function Review({ reviews, setReviews }) {
                   : ""}
               </p>
 
-              <button
-                onClick={() => handleDelete(review._id)}
-                disabled={deletingId === review._id}
-                className={`mt-2 px-3 py-1 text-sm text-white rounded ${
-                  deletingId === review._id
-                    ? "bg-red-300 cursor-not-allowed"
-                    : "bg-red-500 hover:bg-red-600"
-                }`}
-              >
-                {deletingId === review._id ? "Deleting..." : "Delete"}
-              </button>
+              {user && review.owner && user._id === review.owner._id && (
+                <button
+                  onClick={() => handleDelete(review._id)}
+                  disabled={deletingId === review._id}
+                  className={`mt-2 px-3 py-1 text-sm text-white rounded ${
+                    deletingId === review._id
+                      ? "bg-red-300 cursor-not-allowed"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  {deletingId === review._id ? "Deleting..." : "Delete"}
+                </button>
+              )}
             </div>
           ))
         ) : (
