@@ -61,7 +61,7 @@ export default function Home() {
                   {listing.description}
                 </p>
                 <p className="text-sm text-gray-700">
-                  ₹{listing.price} — {listing.location}, {listing.country}
+                  ₹{listing.price}/ day — {listing.location}, {listing.country}
                 </p>
               </div>
             </div>
