@@ -10,7 +10,7 @@ export default function Navbar() {
         <Link to="/">
           <div className="flex items-center">
             <img src="/logo.png" alt="airbnb logo" className="h-8 mr-1 ml-2" />
-            <h2 className="text-red-500 font-semibold text-2xl">airbnb</h2>
+            <h2 className="text-red-500 font-semibold text-2xl">Wanderlust</h2>
           </div>
         </Link>
 
