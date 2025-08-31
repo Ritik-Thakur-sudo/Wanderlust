@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../axiosConfig";
 import Review from "../components/Review";
+import { useAuth } from "../context/AuthContext";
 
 export default function Show() {
   const { id } = useParams();
@@ -9,6 +10,7 @@ export default function Show() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth(); 
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -61,29 +63,41 @@ export default function Show() {
           />
         )}
 
+        <p className="italic mb-2 text-lg">
+          Owned by:{" "}
+          <span className="font-semibold">{listing.owner.username}</span>
+        </p>
         <p className="text-gray-700 text-lg mb-2">{listing.description}</p>
         <p className="text-gray-800 font-medium text-lg">
           ₹{listing.price} — {listing.location}, {listing.country}
         </p>
 
-        <div className="mt-4 flex gap-8 items-center">
-          <Link
-            to={`/listings/${id}/edit`}
-            className="text-gray-700 underline font-medium"
-          >
-            Edit this listing
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="border px-4 py-2 rounded bg-red-500 text-white"
-          >
-            Delete listing
-          </button>
-        </div>
+        {user && listing.owner._id === user._id && (
+          <div className="mt-4 flex gap-8 items-center">
+            <Link
+              to={`/listings/${id}/edit`}
+              className="text-gray-700 underline font-medium"
+            >
+              Edit this listing
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="border px-4 py-2 rounded bg-red-500 text-white"
+            >
+              Delete listing
+            </button>
+          </div>
+        )}
       </div>
 
       <hr className="my-6" />
-      <Review reviews={reviews} addReview={addReview} setReviews={setReviews} />
+      <Review
+        reviews={reviews}
+        addReview={addReview}
+        setReviews={setReviews}
+        user={user}
+        listingId={id}
+      />
     </>
   );
 }

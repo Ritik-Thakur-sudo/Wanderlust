@@ -6,10 +6,48 @@ const router = express.Router();
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+function isLoggedIn(req, res, next) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ success: false, error: "Login required" });
+  }
+  next();
+}
+
+async function isOwner(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid listing id" });
+    }
+
+    const listing = await Listing.findById(id);
+    if (!listing) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Listing not found" });
+    }
+
+    if (!req.user || listing.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, error: "Not authorized" });
+    }
+
+    req.listing = listing;
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+}
+
 // Index Route
 router.get("/", async (req, res) => {
   try {
-    const listings = await Listing.find({});
+    const listings = await Listing.find({}).populate(
+      "owner",
+      "username email name"
+    );
     return res.json({ success: true, data: listings });
   } catch (error) {
     console.error(error);
@@ -17,7 +55,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET Route
+// SHow Route
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -27,12 +65,18 @@ router.get("/:id", async (req, res) => {
         .json({ success: false, error: "Invalid listing id" });
     }
 
-    const listing = await Listing.findById(id).populate("reviews");
+    const listing = await Listing.findById(id)
+      .populate({
+        path: "reviews",
+        populate: { path: "owner", select: "username email" },
+      })
+      .populate("owner", "username email");
     if (!listing) {
       return res
         .status(404)
         .json({ success: false, error: "Listing not found" });
     }
+
     return res.json({ success: true, data: listing });
   } catch (error) {
     console.error(error);
@@ -40,8 +84,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST Route
-router.post("/", async (req, res) => {
+// Create Route
+router.post("/", isLoggedIn, async (req, res) => {
   try {
     const payload = req.body || {};
     if (!payload.title || !payload.description) {
@@ -52,39 +96,28 @@ router.post("/", async (req, res) => {
     }
 
     const listing = new Listing(payload);
+    listing.owner = req.user._id;
     await listing.save();
+    await listing.populate("owner", "username email name");
 
     return res.status(201).json({
       success: true,
-      message: "New Listing created",
+      message: "New listing created",
       data: listing,
     });
   } catch (error) {
     console.error(error);
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// UPDATE Route
-router.put("/:id", async (req, res) => {
+// Update ROUTE
+router.put("/:id", isLoggedIn, isOwner, async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!isValidId(id)) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid listing id" });
-    }
-
-    const updated = await Listing.findByIdAndUpdate(id, req.body, {
+    const updated = await Listing.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
-
-    if (!updated) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Listing not found" });
-    }
+    }).populate("owner", "username email name");
 
     return res.json({
       success: true,
@@ -93,21 +126,14 @@ router.put("/:id", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(400).json({ success: false, error: "Invalid request" });
+    return res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// DELETE Route
-router.delete("/:id", async (req, res) => {
+// Delete Route
+router.delete("/:id", isLoggedIn, isOwner, async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!isValidId(id)) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid listing id" });
-    }
-
-    const deleted = await Listing.findByIdAndDelete(id);
+    const deleted = await Listing.findByIdAndDelete(req.params.id);
     if (!deleted) {
       return res
         .status(404)
@@ -121,16 +147,16 @@ router.delete("/:id", async (req, res) => {
     return res.json({
       success: true,
       message: "Listing deleted",
-      data: { _id: id },
+      data: { _id: req.params.id },
     });
   } catch (error) {
     console.error(error);
-    return res.status(400).json({ success: false, error: "Invalid id" });
+    return res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// Review Route
-router.post("/:id/reviews", async (req, res) => {
+// Review
+router.post("/:id/reviews", isLoggedIn, async (req, res) => {
   try {
     const { id } = req.params;
     if (!isValidId(id)) {
@@ -160,11 +186,17 @@ router.post("/:id/reviews", async (req, res) => {
         .json({ success: false, error: "Comment cannot be empty" });
     }
 
-    const review = new Review({ rating, comment });
+    const review = new Review({
+      rating,
+      comment,
+      owner: req.user._id,
+    });
     await review.save();
 
     listing.reviews.push(review._id);
     await listing.save();
+
+    await review.populate("owner", "username email");
 
     return res.status(201).json({
       success: true,
@@ -179,8 +211,8 @@ router.post("/:id/reviews", async (req, res) => {
   }
 });
 
-// DELETE Review
-router.delete("/:id/reviews/:reviewId", async (req, res) => {
+// Delete Review
+router.delete("/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
   try {
     const { id, reviewId } = req.params;
     if (!isValidId(id) || !isValidId(reviewId)) {
@@ -189,23 +221,22 @@ router.delete("/:id/reviews/:reviewId", async (req, res) => {
         .json({ success: false, error: "Invalid id or reviewId" });
     }
 
-    const listing = await Listing.findByIdAndUpdate(
-      id,
-      { $pull: { reviews: reviewId } },
-      { new: true }
-    );
-    if (!listing) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Listing not found" });
-    }
-
-    const deleted = await Review.findByIdAndDelete(reviewId);
-    if (!deleted) {
+    const review = await Review.findById(reviewId);
+    if (!review) {
       return res
         .status(404)
         .json({ success: false, error: "Review not found" });
     }
+
+    if (!review.owner.equals(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        error: "Not able to delete this review",
+      });
+    }
+
+    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await review.deleteOne();
 
     return res.json({
       success: true,
@@ -216,7 +247,7 @@ router.delete("/:id/reviews/:reviewId", async (req, res) => {
     console.error("Delete review failed:", error);
     return res
       .status(500)
-      .json({ success: false, error: "Server error deleting review" });
+      .json({ success: false, error: "Server error" });
   }
 });
 
