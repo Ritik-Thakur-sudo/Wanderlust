@@ -13,6 +13,9 @@ export default function Edit() {
     location: "",
     country: "",
   });
+
+  const [image, setImage] = useState(null);
+  const [currentImage, setCurrentImage] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -25,13 +28,13 @@ export default function Edit() {
         setListing({
           title: data.title || "",
           description: data.description || "",
-          price:
-            data.price !== undefined && data.price !== null
-              ? String(data.price)
-              : "",
+          price: data.price ? String(data.price) : "",
           location: data.location || "",
           country: data.country || "",
         });
+        if (data.image?.url) {
+          setCurrentImage(data.image.url);
+        }
       } catch (err) {
         console.error("Error fetching listing:", err);
         alert("Failed to load listing.");
@@ -47,6 +50,20 @@ export default function Edit() {
     setListing((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        alert("Only JPG, PNG, or WEBP images are allowed.");
+        e.target.value = "";
+        setImage(null);
+        return;
+      }
+      setImage(file);
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!listing.title.trim()) newErrors.title = "Title is required.";
@@ -57,7 +74,6 @@ export default function Edit() {
     if (!listing.price || Number.isNaN(priceNum) || priceNum <= 0) {
       newErrors.price = "Price must be a positive number.";
     }
-
     if (!listing.location.trim()) newErrors.location = "Location is required.";
     if (!listing.country.trim()) newErrors.country = "Country is required.";
 
@@ -71,12 +87,20 @@ export default function Edit() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        ...listing,
-        price: Number(listing.price),
-      };
+      const formData = new FormData();
+      formData.append("title", listing.title);
+      formData.append("description", listing.description);
+      formData.append("price", Number(listing.price));
+      formData.append("location", listing.location);
+      formData.append("country", listing.country);
+      if (image) {
+        formData.append("image", image);
+      }
 
-      const res = await api.put(`/listings/${id}`, payload);
+      const res = await api.put(`/listings/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       if (res.data?.success === false) {
         return alert(res.data.error || "Failed to update listing.");
       }
@@ -94,79 +118,86 @@ export default function Edit() {
   return (
     <div className="p-5 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Edit Listing</h1>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        encType="multipart/form-data"
+      >
+        <input
+          type="text"
+          name="title"
+          placeholder="Title"
+          value={listing.title}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <input
-            type="text"
-            name="title"
-            placeholder="Title"
-            value={listing.title}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-          {errors.title && (
-            <p className="text-red-500 text-sm">{errors.title}</p>
-          )}
-        </div>
+        <textarea
+          name="description"
+          placeholder="Description"
+          value={listing.description}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          rows={4}
+        />
+        {errors.description && (
+          <p className="text-red-500 text-sm">{errors.description}</p>
+        )}
 
-        <div>
-          <textarea
-            name="description"
-            placeholder="Description"
-            value={listing.description}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            rows={4}
-          />
-          {errors.description && (
-            <p className="text-red-500 text-sm">{errors.description}</p>
-          )}
-        </div>
+        {currentImage && (
+          <div>
+            <p className="text-gray-600 text-sm mb-1">Current Image:</p>
+            <img
+              src={currentImage}
+              alt="Listing"
+              className="w-48 rounded mb-2"
+            />
+          </div>
+        )}
 
-        <div>
-          <input
-            type="number"
-            name="price"
-            placeholder="Price"
-            value={listing.price}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            min="1"
-            step="1"
-          />
-          {errors.price && (
-            <p className="text-red-500 text-sm">{errors.price}</p>
-          )}
-        </div>
+        <input
+          type="file"
+          name="image"
+          accept="image/jpeg,image/png,image/jpg,image/webp"
+          onChange={handleImageChange}
+        />
 
-        <div>
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={listing.location}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-          {errors.location && (
-            <p className="text-red-500 text-sm">{errors.location}</p>
-          )}
-        </div>
+        <input
+          type="number"
+          name="price"
+          placeholder="Price"
+          value={listing.price}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          min="1"
+          step="1"
+        />
+        {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
 
-        <div>
-          <input
-            type="text"
-            name="country"
-            placeholder="Country"
-            value={listing.country}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-          {errors.country && (
-            <p className="text-red-500 text-sm">{errors.country}</p>
-          )}
-        </div>
+        <input
+          type="text"
+          name="location"
+          placeholder="Location"
+          value={listing.location}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.location && (
+          <p className="text-red-500 text-sm">{errors.location}</p>
+        )}
+
+        <input
+          type="text"
+          name="country"
+          placeholder="Country"
+          value={listing.country}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.country && (
+          <p className="text-red-500 text-sm">{errors.country}</p>
+        )}
 
         <button
           type="submit"

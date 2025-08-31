@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Listing = require("../models/listing");
 const Review = require("../models/review");
+const { cloudinary } = require("../cloudConfig"); 
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -49,6 +50,8 @@ module.exports.show = async (req, res) => {
 
 // Create
 module.exports.create = async (req, res) => {
+  const url = req.file.path;
+  let filename = req.file.filename;
   try {
     const payload = req.body || {};
     if (!payload.title || !payload.description) {
@@ -60,6 +63,7 @@ module.exports.create = async (req, res) => {
 
     const listing = new Listing(payload);
     listing.owner = req.user._id;
+    listing.image = { url, filename };
     await listing.save();
     await listing.populate("owner", "username email name");
 
@@ -74,18 +78,45 @@ module.exports.create = async (req, res) => {
   }
 };
 
-//Update
+// Update
 module.exports.update = async (req, res) => {
   try {
-    const updated = await Listing.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    }).populate("owner", "username email name");
+    const { id } = req.params;
+    const { title, description, price, location, country } = req.body;
+
+    const listing = await Listing.findById(id).populate(
+      "owner",
+      "username email name"
+    );
+
+    if (!listing) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Listing not found" });
+    }
+
+    listing.title = title;
+    listing.description = description;
+    listing.price = price;
+    listing.location = location;
+    listing.country = country;
+
+    if (req.file) {
+      if (listing.image?.filename) {
+        await cloudinary.uploader.destroy(listing.image.filename); 
+      }
+      listing.image = {
+        url: req.file.path,
+        filename: req.file.filename,
+      };
+    }
+
+    await listing.save();
 
     return res.json({
       success: true,
       message: "Listing updated",
-      data: updated,
+      data: listing,
     });
   } catch (error) {
     console.error(error);
@@ -93,6 +124,7 @@ module.exports.update = async (req, res) => {
   }
 };
 
+// Delete
 module.exports.delete = async (req, res) => {
   try {
     const deleted = await Listing.findByIdAndDelete(req.params.id);
@@ -104,6 +136,10 @@ module.exports.delete = async (req, res) => {
 
     if (deleted.reviews?.length) {
       await Review.deleteMany({ _id: { $in: deleted.reviews } });
+    }
+
+    if (deleted.image?.filename) {
+      await cloudinary.uploader.destroy(deleted.image.filename);
     }
 
     return res.json({

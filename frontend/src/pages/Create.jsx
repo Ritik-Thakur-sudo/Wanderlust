@@ -11,13 +11,13 @@ export default function Create() {
     country: "",
   });
 
+  const [image, setImage] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateField = (name, value) => {
     let message = "";
-
     switch (name) {
       case "title":
         if (!value.trim()) message = "Title is required.";
@@ -44,7 +44,6 @@ export default function Create() {
       default:
         break;
     }
-
     return message;
   };
 
@@ -52,6 +51,20 @@ export default function Create() {
     const { name, value } = e.target;
     setListing((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        alert("Only JPG, PNG, or WEBP images are allowed.");
+        e.target.value = ""; 
+        setImage(null);
+        return;
+      }
+      setImage(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -62,6 +75,7 @@ export default function Create() {
       const error = validateField(key, listing[key]);
       if (error) newErrors[key] = error;
     });
+    if (!image) newErrors.image = "Image is required.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -70,18 +84,20 @@ export default function Create() {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:8080/listings", listing, {
-        withCredentials: true, 
+
+      const formData = new FormData();
+      formData.append("image", image);
+      Object.keys(listing).forEach((key) => {
+        formData.append(key, listing[key]);
       });
 
-      console.log("Listing created:", res.data);
+      const res = await axios.post("http://localhost:8080/listings", formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       const newId = res.data?.data?._id;
-      if (newId) {
-        navigate(`/listings/${newId}`);
-      } else {
-        navigate("/");
-      }
+      navigate(newId ? `/listings/${newId}` : "/");
     } catch (err) {
       console.error("Error creating listing:", err.response?.data || err);
       alert(err.response?.data?.error || "Failed to create listing.");
@@ -93,33 +109,75 @@ export default function Create() {
   return (
     <div className="p-5 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Add New Listing</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {["title", "description", "price", "location", "country"].map(
-          (field) => (
-            <div key={field}>
-              {field === "description" ? (
-                <textarea
-                  name={field}
-                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                  value={listing[field]}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                />
-              ) : (
-                <input
-                  type={field === "price" ? "number" : "text"}
-                  name={field}
-                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                  value={listing[field]}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                />
-              )}
-              {errors[field] && (
-                <p className="text-red-500 text-sm">{errors[field]}</p>
-              )}
-            </div>
-          )
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        encType="multipart/form-data"
+      >
+        <input
+          type="text"
+          name="title"
+          placeholder="Title"
+          value={listing.title}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+
+        <textarea
+          name="description"
+          placeholder="Description"
+          value={listing.description}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          rows={4}
+        />
+        {errors.description && (
+          <p className="text-red-500 text-sm">{errors.description}</p>
+        )}
+
+        <input
+          type="file"
+          name="image"
+          accept="image/jpeg,image/png,image/jpg,image/webp"
+          onChange={handleImageChange}
+        />
+        {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
+
+        <input
+          type="number"
+          name="price"
+          placeholder="Price"
+          value={listing.price}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          min="1"
+          step="1"
+        />
+        {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
+
+        <input
+          type="text"
+          name="location"
+          placeholder="Location"
+          value={listing.location}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.location && (
+          <p className="text-red-500 text-sm">{errors.location}</p>
+        )}
+
+        <input
+          type="text"
+          name="country"
+          placeholder="Country"
+          value={listing.country}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        {errors.country && (
+          <p className="text-red-500 text-sm">{errors.country}</p>
         )}
 
         <button
