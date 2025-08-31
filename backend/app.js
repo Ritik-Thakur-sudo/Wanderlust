@@ -5,13 +5,13 @@ const Listing = require("./models/listing.js");
 const router = express.Router();
 const listingRoutes = require("./routes/listingRoutes.js");
 const cors = require("cors");
-
+const session = require("express-session");
 
 app.use(express.json());
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
 
 main()
@@ -25,6 +25,19 @@ main()
 async function main() {
   await mongoose.connect(MONGO_URL);
 }
+
+const sessionOptions = {
+  secret: "mysupersecretcode",
+  resave: false,
+  saveUninitialized: true,
+  Cookie: {
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true
+  }
+};
+
+app.use(session(sessionOptions));
 
 app.get("/", (req, res) => {
   res.send("i am root");
