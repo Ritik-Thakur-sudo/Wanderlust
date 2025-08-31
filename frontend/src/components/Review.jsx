@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../axiosConfig";
 import { useAuth } from "../context/AuthContext";
+import "../css/rating.css";
 
 export default function Review({ reviews, setReviews }) {
   const { id } = useParams();
@@ -64,56 +65,75 @@ export default function Review({ reviews, setReviews }) {
     }
   };
 
-  const Stars = ({ value }) => {
-    const full = Math.max(0, Math.min(5, Number(value) || 0));
-    const stars = [];
-
-    for (let i = 0; i < 5; i++) {
-      stars.push(
-        <img
-          key={i}
-          src="/OIP.jpg"
-          alt={i < full ? "filled star" : "empty star"}
-          className={`w-6 h-6 inline-block ${
-            i < full ? "" : "grayscale opacity-40"
-          }`}
-        />
-      );
-    }
-
-    return (
-      <span
-        aria-label={`Rating: ${full} out of 5`}
-        className="flex items-center gap-1"
-      >
-        {stars}
-      </span>
-    );
-  };
-
   return (
     <div className="p-6 mx-auto">
       <div className="p-4 border rounded-md shadow-sm mb-6">
         <h4 className="text-xl font-bold mb-2">Leave a Review</h4>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label htmlFor="rating" className="block font-medium">
-              Rating (1-5)
-            </label>
+          <label htmlFor="rating">Rating:</label>
+          <fieldset className="starability-slot">
+
             <input
-              id="rating"
-              type="number"
-              min={1}
-              max={5}
-              value={rating}
-              onChange={(e) => {
-                setRating(Number(e.target.value));
-                setError("");
-              }}
-              className="border rounded px-2 py-1 w-full"
+              type="radio"
+              id="rate1"
+              name="rating"
+              value="1"
+              checked={rating === 1}
+              onChange={(e) => setRating(Number(e.target.value))}
             />
-          </div>
+            <label htmlFor="rate1" title="Terrible">
+              1 star
+            </label>
+
+            <input
+              type="radio"
+              id="rate2"
+              name="rating"
+              value="2"
+              checked={rating === 2}
+              onChange={(e) => setRating(Number(e.target.value))}
+            />
+            <label htmlFor="rate2" title="Not good">
+              2 stars
+            </label>
+
+            <input
+              type="radio"
+              id="rate3"
+              name="rating"
+              value="3"
+              checked={rating === 3}
+              onChange={(e) => setRating(Number(e.target.value))}
+            />
+            <label htmlFor="rate3" title="Average">
+              3 stars
+            </label>
+
+            <input
+              type="radio"
+              id="rate4"
+              name="rating"
+              value="4"
+              checked={rating === 4}
+              onChange={(e) => setRating(Number(e.target.value))}
+            />
+            <label htmlFor="rate4" title="Very good">
+              4 stars
+            </label>
+
+            <input
+              type="radio"
+              id="rate5"
+              name="rating"
+              value="5"
+              checked={rating === 5}
+              onChange={(e) => setRating(Number(e.target.value))}
+            />
+            <label htmlFor="rate5" title="Amazing">
+              5 stars
+            </label>
+          </fieldset>
 
           <div className="mb-3">
             <label htmlFor="comment" className="block font-medium">
@@ -154,44 +174,60 @@ export default function Review({ reviews, setReviews }) {
       <hr className="mb-4" />
 
       <div>
-        <h4 className="text-xl font-bold mb-3">All Reviews</h4>
+        <h4 className="text-xl font-bold mb-4">All Reviews</h4>
 
         {reviews?.length ? (
-          reviews.map((review) => (
-            <div
-              key={review._id}
-              className="p-3 mb-3 border rounded-md bg-gray-50 shadow-sm"
-            >
-              <p className="font-medium">
-                {review.owner?.username || review.owner?.email || "Anonymous"}
-              </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            {reviews.map((review) => (
+              <div
+                key={review._id}
+                className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-gray-900">
+                    {review.owner?.username ||
+                      review.owner?.email ||
+                      "Anonymous"}
+                  </p>
 
-              <p className="flex items-center gap-2 text-yellow-500">
-                <Stars value={review.rating} />
-                <span className="text-gray-600">({review.rating})</span>
-              </p>
-              <p className="mb-1">{review.comment}</p>
-              <p className="text-sm text-gray-500">
-                {review.createdAt
-                  ? new Date(review.createdAt).toLocaleString()
-                  : ""}
-              </p>
+                  <div className="flex items-center gap-1 text-sm text-gray-700">
+                    <span
+                      className="starability-result"
+                      data-rating={review.rating}
+                    ></span>
+                    <span className="ml-1">{review.rating}</span>
+                  </div>
+                </div>
 
-              {user && review.owner && user._id === review.owner._id && (
-                <button
-                  onClick={() => handleDelete(review._id)}
-                  disabled={deletingId === review._id}
-                  className={`mt-2 px-3 py-1 text-sm text-white rounded ${
-                    deletingId === review._id
-                      ? "bg-red-300 cursor-not-allowed"
-                      : "bg-red-500 hover:bg-red-600"
-                  }`}
-                >
-                  {deletingId === review._id ? "Deleting..." : "Delete"}
-                </button>
-              )}
-            </div>
-          ))
+                <p className="mt-3 text-gray-700 leading-relaxed">
+                  {review.comment}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  {review.createdAt
+                    ? new Date(review.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : ""}
+                </p>
+
+                {user && review.owner && user._id === review.owner._id && (
+                  <button
+                    onClick={() => handleDelete(review._id)}
+                    disabled={deletingId === review._id}
+                    className={`mt-3 px-3 py-1 text-sm text-white rounded ${
+                      deletingId === review._id
+                        ? "bg-red-300 cursor-not-allowed"
+                        : "bg-red-500 hover:bg-red-600"
+                    }`}
+                  >
+                    {deletingId === review._id ? "Deleting..." : "Delete"}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="p-4 border rounded-md bg-gray-100 text-gray-500 text-center">
             No reviews yet!
