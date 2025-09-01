@@ -154,6 +154,34 @@ npm run dev
 
 ## Screenshots
 
+### Home Page
+![Home](./screenshots/home.png)
+![Home2](./screenshots/landingPage.png)
+
+### Signup & Login
+
+![Signup](./screenshots/signup.png)
+![Login](./screenshots/login.png)
+![Login2](./screenshots/login2.png)
+
+### Dashboard
+![menu](./screenshots/menu.png)
+![menu2](./screenshots/loginHome.png)
+
+### Listings
+![Listings](./screenshots/create2.png)
+
+### Reviews
+![review](./screenshots/review.png)
+![review](./screenshots/review2.png)
+
+### Create a Listing
+![Create Listing](./screenshots/create.png)
+![Create Listing](./screenshots/create3.png)
+
+### Edit a Listing
+![Edit Listing](./screenshots/edit.png)
+![Edit Listing](./screenshots/edit2.png)
 
 ---
 
