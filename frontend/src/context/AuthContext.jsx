@@ -9,6 +9,8 @@ import api from "../axiosConfig";
 
 const AuthCtx = createContext(null);
 
+console.log("AuthContext loaded, baseURL:", api.defaults.baseURL);
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
