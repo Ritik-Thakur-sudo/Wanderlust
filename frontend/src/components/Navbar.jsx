@@ -211,13 +211,19 @@ export default function Navbar() {
               ref={btnRef}
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none"
+              className="flex items-center gap-2 p-1 rounded-full border hover:shadow-md transition bg-white"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-controls="user-menu"
               title="Menu"
             >
-              <img src="/menu.svg" alt="menu" className="h-5" />
+              {user ? (
+                <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+              ) : (
+                <img src="/menu.svg" alt="menu" className="h-5" />
+              )}
             </button>
 
             <div
@@ -242,7 +248,6 @@ export default function Navbar() {
                     <span className="flex items-center justify-center w-5 rounded-full border border-gray-300 text-gray-600 text-sm font-medium">
                       ?
                     </span>
-
                     <span className="font-semibold text-gray-800">
                       Help Centre
                     </span>
@@ -263,7 +268,6 @@ export default function Navbar() {
                         It's easy to start hosting and earn extra income
                       </p>
                     </div>
-
                     <img
                       src="/home.png"
                       alt="Host"
@@ -288,9 +292,22 @@ export default function Navbar() {
                     <span>Find a co-host</span>
                   </Link>
 
-                  {user && (
+                  {ready && user && (
                     <>
                       <hr className="my-3" />
+                      <div className="flex items-center gap-3 px-2 py-2">
+                        <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-800">
+                            Welcome, {user.username}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
                       <Link
                         to="/account"
                         onClick={() => setMenuOpen(false)}
@@ -318,7 +335,11 @@ export default function Navbar() {
 
                 <div>
                   <hr className="my-3" />
-                  {ready && user ? (
+                  {!ready ? (
+                    <p className="text-center text-gray-500 text-sm">
+                      Checking session...
+                    </p>
+                  ) : user ? (
                     <button
                       onClick={handleLogout}
                       className="w-full text-left py-2 px-2 text-rose-600 font-semibold hover:bg-gray-50 rounded-lg"
@@ -393,4 +414,3 @@ export default function Navbar() {
     </div>
   );
 }
-

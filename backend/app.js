@@ -12,6 +12,7 @@ const userRoutes = require("./routes/userRoutes.js");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
+
 const app = express();
 
 const PORT = process.env.PORT || 8080;
@@ -24,7 +25,12 @@ const dburl =
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = [process.env.FRONTEND_ORIGIN || "http://localhost:5173"];
+const isProd = process.env.NODE_ENV === "production";
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_ORIGIN,
+].filter(Boolean);
 
 app.use(
   cors({
@@ -37,7 +43,7 @@ app.use(
         console.log("Allowed origin:", origin);
         return callback(null, true);
       } else {
-        console.log("Blocked by CORS:", origin);
+        console.log("Blocked origin:", origin);
         return callback(new Error("Not allowed by CORS"));
       }
     },
@@ -49,7 +55,7 @@ app.use(express.json());
 
 mongoose
   .connect(dburl)
-  .then(() => console.log(`connect to DB: ${dburl}`))
+  .then(() => console.log(`Connected to DB: ${dburl}`))
   .catch((error) => console.error("DB Connection error", error));
 
 const store = MongoStore.create({
@@ -72,8 +78,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
@@ -100,5 +106,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`server listening on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });

@@ -9,8 +9,6 @@ import api from "../axiosConfig";
 
 const AuthCtx = createContext(null);
 
-console.log("AuthContext loaded, baseURL:", api.defaults.baseURL);
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
@@ -19,6 +17,9 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get("/me");
       setUser(data?.data || null);
+    } catch (err) {
+      console.error("Error fetching /me:", err);
+      setUser(null);
     } finally {
       setReady(true);
     }
@@ -29,26 +30,19 @@ export function AuthProvider({ children }) {
   }, [fetchMe]);
 
   const signup = async ({ username, email, password, name }) => {
-    const { data } = await api.post("/signup", {
-      username,
-      email,
-      password,
-      name,
-    });
-    setUser(data.data);
-    return data.data;
+    await api.post("/signup", { username, email, password, name });
+    await fetchMe();
   };
 
   const login = async ({ identifier, password }) => {
-    console.log("API baseURL:", api.defaults.baseURL);
-    const { data } = await api.post("/login", { identifier, password });
-    setUser(data.data);
-    return data.data;
+    await api.post("/login", { identifier, password });
+    await fetchMe();
   };
 
   const logout = async () => {
     await api.post("/logout");
     setUser(null);
+    await fetchMe();
   };
 
   return (
