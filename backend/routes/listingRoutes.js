@@ -12,11 +12,19 @@ const multer = require("multer");
 const { storage } = require("../cloudConfig");
 const upload = multer({ storage });
 
+// explicit create route
+router.post(
+  "/create",
+  isLoggedIn,
+  upload.single("image"),
+  listingController.create
+);
+
 // Listing Routes
 router
   .route("/")
   .get(listingController.index) // Index Route
-  .post(                        
+  .post(
     isLoggedIn,
     upload.single("image"),
     listingController.create // Create Route
@@ -29,7 +37,7 @@ router
     isLoggedIn,
     validateListingId,
     isOwner,
-    upload.single("image"), 
+    upload.single("image"),
     listingController.update // Update Route
   )
   .delete(isLoggedIn, validateListingId, isOwner, listingController.delete); // Delete Route
