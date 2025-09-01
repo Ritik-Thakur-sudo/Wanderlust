@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = async ({ identifier, password }) => {
+    console.log("API baseURL:", api.defaults.baseURL);
     const { data } = await api.post("/login", { identifier, password });
     setUser(data.data);
     return data.data;
