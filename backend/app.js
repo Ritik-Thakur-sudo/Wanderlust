@@ -22,12 +22,25 @@ const dburl =
     ? process.env.ATLASDB_URL
     : process.env.MONGO_URL;
 
+app.set("trust proxy", 1);
+
+const allowedOrigins = [process.env.FRONTEND_ORIGIN || "http://localhost:5173"];
+
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_ORIGIN || "http://localhost:5173",
-      "http://localhost:5173",
-    ],
+    origin: function (origin, callback) {
+      console.log("Incoming request origin:", origin);
+
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        console.log("Allowed origin:", origin);
+        return callback(null, true);
+      } else {
+        console.log("Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -59,8 +72,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
@@ -77,20 +90,6 @@ app.get("/session-test", (req, res) => {
   req.session.visits = (req.session.visits || 0) + 1;
   res.json({ ok: true, visits: req.session.visits });
 });
-
-// app.get("/demo", async (req, res) => {
-//   let fakeUser = new User({
-//     email: "student@gmail.com",
-//     username: "student045",
-//   });
-//   let registeredUser = await User.register(fakeUser, "password");
-//   console.log(registeredUser);
-//   res.send(registeredUser);
-// });
-
-// app.get("/", (_req, res) => {
-//   res.send("i am root");
-// });
 
 app.use("/listings", listingRoutes);
 app.use("/", userRoutes);
