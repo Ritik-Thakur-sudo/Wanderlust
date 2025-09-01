@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../axiosConfig";
 
 export default function Create() {
   const [listing, setListing] = useState({
@@ -91,7 +91,7 @@ export default function Create() {
         formData.append(key, listing[key]);
       });
 
-      const res = await axios.post("http://localhost:8080/listings", formData, {
+      const res = await api.post("/listings", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
