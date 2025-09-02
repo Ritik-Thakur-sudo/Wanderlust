@@ -1,3 +1,11 @@
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
+![Express](https://img.shields.io/badge/Framework-Express-lightgrey)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen)
+![Passport.js](https://img.shields.io/badge/Auth-Passport.js-orange)
+![Cloudinary](https://img.shields.io/badge/Images-Cloudinary-blue)
+![Deployment](https://img.shields.io/badge/Deploy-Render-purple)
+
 # Wanderlust – Airbnb Clone (MERN Stack)
 
 A full-stack Airbnb-inspired web application built with the **MERN stack** (MongoDB, Express.js, React, Node.js) and deployed on **Render**.  
@@ -16,6 +24,17 @@ Features **secure authentication & authorization** with session-based login, **p
 - Password: 12345
 
 ---
+
+## Table of Contents
+- [Live Demo](#live-demo)
+- [Demo Login](#demo-login)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Folder Structure](#folder-structure)
+- [Getting Started](#getting-started)
+- [Screenshots](#screenshots)
+- [Future Improvements](#future-improvements)
+- [Author](#author)
 
 ## Features
 
@@ -95,11 +114,11 @@ Wanderlust/
 |   |   ├── hooks/          # useMe 
 │   │   ├── pages/          # Page-level components (Home, Listings,  Expericece, Service, NotFound, etc)
 │   │   ├── axiosConfig.js  # Axios instance with baseURL
-|   |   ├── index.css       # tailwind module/ custom css
+|   |   ├── index.css       # tailwind css module/ custom css
 |   |   ├── main.jsx        # Root React App
 │   │   └── App.jsx         # Main React app
 |   ├── index.html          # html file
-|   ├── tailwindwind css    # taiwindwind related files
+|   ├── tailwind css    # tailwind css related files
 │   └── .env                # Frontend environment variables
 │
 └── README.md
