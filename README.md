@@ -64,6 +64,11 @@ Features **secure authentication & authorization** with session-based login, **p
 - Render (Frontend + Backend)
 - Environment variables for secrets
 
+## Demo Login
+- Username: demo01
+- email: demo@gmail.com
+- Password: 12345
+
 ---
 
 ##  Folder Structure
