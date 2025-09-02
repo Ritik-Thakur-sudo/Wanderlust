@@ -8,7 +8,12 @@ Features **secure authentication & authorization** with session-based login, **p
 
 ## Live Demo
 - **Frontend**: [https://wanderlust-1-wl7b.onrender.com](https://wanderlust-1-wl7b.onrender.com)  
-- **Backend API**: [https://wanderlust-we4g.onrender.com](https://wanderlust-we4g.onrender.com)  
+- **Backend API**: [https://wanderlust-we4g.onrender.com](https://wanderlust-we4g.onrender.com)
+
+## Demo Login
+- Username: demo01
+- email: demo@gmail.com
+- Password: 12345
 
 ---
 
@@ -63,11 +68,6 @@ Features **secure authentication & authorization** with session-based login, **p
 **Deployment**
 - Render (Frontend + Backend)
 - Environment variables for secrets
-
-## Demo Login
-- Username: demo01
-- email: demo@gmail.com
-- Password: 12345
 
 ---
 
